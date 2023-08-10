@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API Data Rendering</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .search-container {
+      margin-bottom: 20px;
+    }
+    .item {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Search by name">
+    </div>
+    <div class="items-container" id="itemsContainer"></div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <script>
+    const itemsContainer = document.getElementById('itemsContainer');
+    const paginationContainer = document.getElementById('pagination');
+    const searchInput = document.getElementById('searchInput');
+
+    const itemsPerPage = 10;
+    let currentPage = 1;
+    let filteredData = [];
+
+    async function fetchData() {
+      try {
+        const response = await fetch('http://localhost:3001/data');
+        const data = await response.json();
+        filteredData = data; // Initialize filteredData with all data
+        renderItems();
+        renderPagination();
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+
+    function renderItems() {
+      itemsContainer.innerHTML = '';
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const endIndex = startIndex + itemsPerPage;
+      const itemsToDisplay = filteredData.slice(startIndex, endIndex);
+
+      itemsToDisplay.forEach(item => {
+        const itemElement = document.createElement('div');
+        itemElement.classList.add('item');
+        itemElement.textContent = item.name; // Adjust property name accordingly
+        itemsContainer.appendChild(itemElement);
+      });
+    }
+
+    function renderPagination() {
+      const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+      paginationContainer.innerHTML = '';
+
+      for (let page = 1; page <= totalPages; page++) {
+        const pageButton = document.createElement('button');
+        pageButton.textContent = page;
+        pageButton.addEventListener('click', () => {
+          currentPage = page;
+          renderItems();
+        });
+        paginationContainer.appendChild(pageButton);
+      }
+    }
+
+    searchInput.addEventListener('input', () => {
+      const searchValue = searchInput.value.toLowerCase();
+      filteredData = searchValue
+        ? filteredData.filter(item => item.name.toLowerCase().includes(searchValue))
+        : filteredData;
+      currentPage = 1;
+      renderItems();
+      renderPagination();
+    //   fetchData();
+    });
+    fetchData();
+  </script>
+</body>
+</html>
